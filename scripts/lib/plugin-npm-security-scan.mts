@@ -468,6 +468,14 @@ const FROZEN_RELEASE_SECURITY_INVENTORY_POLICIES = new Map<string, PluginSecurit
       requiredSourceFindingCounts: RELEASE_2026_9_8_REQUIRED_REVIEWED_SOURCE_FINDING_COUNTS,
     },
   ],
+  [
+    "release/2026.9.9",
+    {
+      ...CURRENT_SECURITY_INVENTORY_POLICY,
+      optionalPackedFindingCounts: RELEASE_2026_9_8_OPTIONAL_REVIEWED_PACKED_FINDING_COUNTS,
+      requiredSourceFindingCounts: RELEASE_2026_9_8_REQUIRED_REVIEWED_SOURCE_FINDING_COUNTS,
+    },
+  ],
   ["release/2026.10.1", CURRENT_SECURITY_INVENTORY_POLICY],
   [
     "extended-stable/2026.6.33",
@@ -1211,7 +1219,12 @@ async function scanSupplementalInertPluginInput(
     const fixture = REVIEWED_EXACT_PACKED_FIXTURES.find(
       (candidate) => candidate.packageName === plugin.packageName,
     );
-    if (fixture && (targetContextRef === "" || targetContextRef === "release/2026.10.1")) {
+    if (
+      fixture &&
+      (targetContextRef === "" ||
+        targetContextRef === "release/2026.9.9" ||
+        targetContextRef === "release/2026.10.1")
+    ) {
       const entry = staged.inspection.inventory.find(
         (candidate) => candidate.type === "file" && candidate.path === `package/${fixture.path}`,
       );
