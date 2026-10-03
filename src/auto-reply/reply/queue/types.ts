@@ -151,6 +151,13 @@ export type FollowupRun = {
   queuedFollowupReplyDisposition?: QueuedFollowupReplyDisposition;
   /** Provider message ID, when available (for deduplication). */
   messageId?: string;
+  /**
+   * Opaque causal inbound message id: the ONE external/channel message that
+   * causally initiated this queued run. Distinct from {@link messageId}, which
+   * also serves dedupe/routing/anchor/aggregate semantics. Undefined for
+   * multi-source collect batches and synthetic overflow summaries.
+   */
+  causalMessageId?: string;
   summaryLine?: string;
   /** Turn-owned tool authority captured before queue ownership transfers. */
   toolsAllow?: string[];

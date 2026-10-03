@@ -150,6 +150,10 @@ export async function runEmbeddedFallbackCandidate(
         isFinalFallbackAttempt: params.isFinalFallbackAttempt,
         sandboxSessionKey: turn.runtimePolicySessionKey,
         prompt: turn.commandBody,
+        // Causal single-source inbound id only; never a collect/aggregate representative.
+        ...(turn.followupRun.causalMessageId
+          ? { messageId: turn.followupRun.causalMessageId }
+          : {}),
         transcriptPrompt: turn.transcriptCommandBody,
         media: turn.followupRun.media,
         userTurnTranscriptRecorder: params.userTurnTranscriptRecorder,

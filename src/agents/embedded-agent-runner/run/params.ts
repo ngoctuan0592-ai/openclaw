@@ -65,6 +65,13 @@ type ReasoningStreamPayload = Pick<
 };
 
 export type RunEmbeddedAgentParams = {
+  /**
+   * Opaque causal inbound channel message id for this run (single-source only).
+   * Data-only propagation; exhausted as `PluginHookAgentContext.messageId`.
+   * Left undefined for cron/heartbeat/internal, multi-source collect, and
+   * synthetic overflow summaries.
+   */
+  messageId?: string;
   /** Host-minted parent audience inherited by a trusted internal child run. */
   memoryAudience?: import("../../../plugins/memory-provider-types.js").MemoryAudience;
   /** Detached runs may read session identity but never write its durable transcript or metadata. */

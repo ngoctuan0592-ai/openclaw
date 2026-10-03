@@ -13,6 +13,7 @@ type EmbeddedAgentHookRun = Pick<
   EmbeddedRunAttemptParams,
   "runId" | "sessionId" | "sessionKey" | "workspaceDir" | "trigger" | "memoryAudience" | "sandbox"
 > &
+  Pick<EmbeddedRunAttemptParams, "messageId"> &
   Parameters<typeof buildAgentHookContextChannelFields>[0] &
   Parameters<typeof buildAgentHookContextIdentityFields>[0];
 
@@ -37,6 +38,7 @@ export function buildEmbeddedAgentHookContext(
     sandboxed: run.sandbox?.enabled === true,
     workspaceDir: run.workspaceDir,
     trigger: run.trigger,
+    ...(run.messageId ? { messageId: run.messageId } : {}),
     ...buildAgentHookContextChannelFields(run),
     ...buildAgentHookContextIdentityFields(run),
   };

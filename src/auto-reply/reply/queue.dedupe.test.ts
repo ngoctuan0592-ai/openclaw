@@ -212,3 +212,35 @@ describe("followup queue deduplication", () => {
     expect(enqueueFollowupRun(key, source("redelivery"), settings)).toBe(false);
   });
 });
+
+// ---------------------------------------------------------------------------
+// Phase 6C Checkpoint B1: the causal field must have ZERO authority over queue
+// deduplication, which stays governed solely by existing messageId semantics.
+// ---------------------------------------------------------------------------
+describe("Phase 6C B1 causal vs messageId dedupe", () => {
+  it("B1-L1: a differing causal id does not defeat existing messageId dedupe", async () => {
+    const { calls, done, runFollowup } = createDrainRecorder();
+    const first = source("first", { messageId: "provider-same" });
+    first.causalMessageId = "causal-A";
+    expect(enqueueFollowupRun(key, first, settings)).toBe(true);
+    scheduleFollowupDrain(key, runFollowup);
+    await done.promise;
+    const second = source("second", { messageId: "provider-same" });
+    second.causalMessageId = "causal-B";
+    // Same messageId => still a duplicate despite a different causal id.
+    expect(enqueueFollowupRun(key, second, settings)).toBe(false);
+    expect(calls).toHaveLength(1);
+  });
+
+  it("B1-L2: a shared causal id is not treated as a duplicate", () => {
+    const first = source("first", { messageId: "provider-A" });
+    first.causalMessageId = "shared-causal";
+    const second = source("second", { messageId: "provider-B" });
+    second.causalMessageId = "shared-causal";
+    expect(enqueueFollowupRun(key, first, settings)).toBe(true);
+    // Distinct messageId => distinct work even though causal ids match.
+    expect(enqueueFollowupRun(key, second, settings)).toBe(true);
+    clearFollowupQueue(key);
+    clearFollowupDrainCallback(key);
+  });
+});

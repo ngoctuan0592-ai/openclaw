@@ -37,7 +37,7 @@ import {
   waitForQueueDebounce,
 } from "../../../utils/queue-helpers.js";
 import { isRoutableChannel } from "../route-reply.js";
-import { resolveCollectedRun } from "./collected-run.js";
+import { resolveCollectedRun, resolveCollectGroupIdentity } from "./collected-run.js";
 import {
   collectRuntimeMetadata,
   createOverflowSummaryRetrySource,
@@ -855,6 +855,10 @@ async function runSyntheticOverflowSummary(params: {
     queueAbortSignal: params.source.queueAbortSignal,
     transcriptPrompt: params.prompt,
     messageId: params.source.messageId,
+    // Synthetic overflow summary NEVER carries an external single-message causal
+    // identity: a summary may represent multiple original inbound messages, so
+    // causal attribution is always undefined (false-negative preferred over
+    // false-positive attribution). Existing messageId semantics unchanged.
     userTurnTranscriptRecorder,
     run: resolveCollectedRun(params.sources, params.source.run),
     enqueuedAt: Date.now(),
@@ -1176,7 +1180,7 @@ export function scheduleFollowupDrain(
                 transcriptPrompt,
                 ...(userTurnTranscriptRecorder ? { userTurnTranscriptRecorder } : {}),
                 run,
-                messageId: groupSource.messageId ?? resolveFollowupReplyAnchor(groupSource),
+                ...resolveCollectGroupIdentity(activeGroupItems, groupSource),
                 enqueuedAt: Date.now(),
                 ...routing,
                 ...collectRuntimeMetadata(activeGroupItems, cancellation.signal),

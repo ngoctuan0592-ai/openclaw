@@ -50,6 +50,16 @@ export type PluginHookAgentContext = PluginHookContextWindow & {
   chatId?: string;
   /** Sender identity for channel-originated runs when available. */
   senderId?: string;
+  /**
+   * Opaque inbound channel message id that uniquely initiated this run.
+   *
+   * Present only when the host can attribute the run to exactly one external
+   * channel inbound message (normal single-source direct/followup turn).
+   * Absent for cron/heartbeat/internal/subagent turns, for multi-source
+   * collected runs, and for synthetic overflow summaries. Never inferred from
+   * prompt text, timestamps, or queue order.
+   */
+  messageId?: string;
   trigger?: string;
   channelId?: string;
   /** Typed origin of the turn's user-role input when supplied by the producer. */

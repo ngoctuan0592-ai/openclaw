@@ -14,6 +14,7 @@ import {
 import { resolveFastModeState } from "../../agents/fast-mode.js";
 import { runAgentHarnessBeforeMessageWriteHook } from "../../agents/harness/hook-helpers.js";
 import { resolveOwnerPromptNumbers } from "../../agents/owner-display.js";
+import { isSyntheticSourceReplyTurn } from "../../agents/reply-completion.js";
 import { revokeRequesterCronAuthority } from "../../agents/subagents/requester-cron-authority.js";
 import {
   attachToolAllowlistIntersection,
@@ -377,6 +378,11 @@ export async function executePreparedReplyRun(state: PreparedReplyRunAdmission) 
   }
   const admittedSessionSettings = opts?.admittedSessionSettings;
   const groupTurn = getGroupThreadTurn();
+  // Synthetic/internal turns (heartbeat, cron/internal_system, inter_session/
+  // subagent) may carry a technical MessageSid, but it is NOT an external
+  // initiating message: never expose it as causal identity. Canonical
+  // classification authority is isSyntheticSourceReplyTurn.
+  const isSyntheticCausalTurn = isSyntheticSourceReplyTurn({ inputProvenance, isHeartbeat });
   const personalBootstrapEligible = isSessionPersonalBootstrapTurn({
     ...ctx,
     InternalTurnSource: ctx.InternalTurnSource ?? sessionCtx.InternalTurnSource,
@@ -418,6 +424,11 @@ export async function executePreparedReplyRun(state: PreparedReplyRunAdmission) 
       groupTurn && groupTurn.round > 1
         ? groupTurn.messageId
         : (sessionCtx.MessageSidFull ?? sessionCtx.MessageSid),
+    // Causal identity: exactly the single current inbound channel message.
+    // Never derived from group/aggregate turn state. Suppressed entirely for
+    // synthetic/internal turns so a technical MessageSid cannot masquerade as
+    // an external causal message id.
+    ...(sourceMessageId && !isSyntheticCausalTurn ? { causalMessageId: sourceMessageId } : {}),
     summaryLine: baseBodyTrimmedRaw,
     ...(queuedToolsAllow !== undefined ? { toolsAllow: queuedToolsAllow } : {}),
     ...(opts?.disableTools !== undefined ? { disableTools: opts.disableTools } : {}),

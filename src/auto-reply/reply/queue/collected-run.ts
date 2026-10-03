@@ -1,4 +1,5 @@
 import { compareChannelAdmissionParticipants } from "../../../channels/message-access/admission-evidence.js";
+import { resolveFollowupReplyAnchor } from "./delivery-context.js";
 import type { FollowupRun } from "./types.js";
 
 export function resolveCollectedRun(items: readonly FollowupRun[], source: FollowupRun["run"]) {
@@ -24,5 +25,25 @@ export function resolveCollectedRun(items: readonly FollowupRun[], source: Follo
     senderIsOwner: false,
     traceAuthorized: false,
     ownerNumbers: [],
+  };
+}
+
+/**
+ * Delivery identity fields for a collected group's drained run.
+ *
+ * - `messageId` keeps the existing representative/reply-anchor semantics.
+ * - `causalMessageId` is the single active source's causal inbound id; for a
+ *   multi-source group it is absent (no representative/newest/FIFO inference).
+ *   Synthetic overflow summaries never reach this helper.
+ */
+export function resolveCollectGroupIdentity(
+  items: readonly FollowupRun[],
+  groupSource: FollowupRun,
+): { messageId: string | undefined; causalMessageId?: string } {
+  return {
+    messageId: groupSource.messageId ?? resolveFollowupReplyAnchor(groupSource),
+    ...(items.length === 1 && items[0]?.causalMessageId
+      ? { causalMessageId: items[0].causalMessageId }
+      : {}),
   };
 }
