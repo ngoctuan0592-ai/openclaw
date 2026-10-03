@@ -6,6 +6,7 @@ import {
   PostMessageTransport,
 } from "@modelcontextprotocol/ext-apps/app-bridge";
 import { isMcpAppViewExpiredError } from "@openclaw/gateway-protocol";
+import { raceWithTimeout } from "@openclaw/retry";
 import { LitElement, css, html, nothing, type PropertyValues } from "lit";
 import { property } from "lit/decorators.js";
 import { createRef, ref } from "lit/directives/ref.js";
@@ -302,19 +303,11 @@ export class McpAppView extends LitElement {
     }
     const teardown = (async () => {
       if (resources.bridge) {
-        let timeout: number | undefined;
-        try {
-          await Promise.race([
-            resources.bridge.teardownResource({}).catch(() => undefined),
-            new Promise<void>((resolve) => {
-              timeout = window.setTimeout(resolve, MCP_APP_TEARDOWN_TIMEOUT_MS);
-            }),
-          ]);
-        } finally {
-          if (timeout !== undefined) {
-            window.clearTimeout(timeout);
-          }
-        }
+        await raceWithTimeout(
+          resources.bridge.teardownResource({}).catch(() => undefined),
+          MCP_APP_TEARDOWN_TIMEOUT_MS,
+          () => undefined,
+        );
       }
       await resources.transport?.close().catch(() => undefined);
       resources.iframe.remove();

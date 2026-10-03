@@ -2,6 +2,7 @@ import type { DaemonStatus } from "../cli/daemon-cli/status.gather.js";
 import { promptYesNo } from "../cli/prompt.js";
 import type { RuntimeEnv } from "../runtime.js";
 import { createLazyImportLoader } from "../shared/lazy-promise.js";
+import { sleep } from "../utils/sleep.js";
 import { gatewayProbeResultSawGateway } from "./gateway-health-auth-diagnostic.js";
 
 const daemonStatusModuleLoader = createLazyImportLoader(
@@ -165,9 +166,7 @@ async function waitForGatewayReady(params: {
     attempt < 20 && !gatewayIsReady(latest, params.readyWhenReachable);
     attempt += 1
   ) {
-    await new Promise((resolve) => {
-      setTimeout(resolve, 500);
-    });
+    await sleep(500);
     latest = await params.gatherStatus();
   }
   return latest;

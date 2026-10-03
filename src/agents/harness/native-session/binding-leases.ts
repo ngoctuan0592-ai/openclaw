@@ -4,6 +4,7 @@ import type {
   PluginStateKeyedStore,
   PluginStateSyncKeyedStore,
 } from "../../../plugin-state/plugin-state-store.js";
+import { sleep } from "../../../utils/sleep.js";
 
 /** Serializes native binding changes across processes without owning backend policy. */
 export function createNativeSessionBindingLeases<TRecord extends NativeSessionBindingRecord>(
@@ -366,9 +367,3 @@ type NativeSessionBindingLeaseOwner = {
   failure?: Error;
   assertCurrent?: () => void;
 };
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(resolve, ms);
-  });
-}
